@@ -57,10 +57,7 @@ app.post("/webex", async (req, res) => {
   try {
     const event = req.body;
 
-    // Evitar bucle (muy importante)
-    if (event.data.personId === event.actorId) {
-      return res.sendStatus(200);
-    }
+    console.log("EVENTO COMPLETO:", JSON.stringify(event, null, 2));
 
     if (!event.data || !event.data.roomId) {
       return res.sendStatus(200);
@@ -70,7 +67,7 @@ app.post("/webex", async (req, res) => {
       "https://webexapis.com/v1/messages",
       {
         roomId: event.data.roomId,
-        text: "Hola, te escucho 👋\nEscribe: consumo"
+        text: "Hola, te escucho 👋"
       },
       {
         headers: {
@@ -82,11 +79,10 @@ app.post("/webex", async (req, res) => {
 
     res.sendStatus(200);
   } catch (error) {
-    console.error("Error en webhook:", error.response?.data || error.message);
+    console.error("Error:", error.response?.data || error.message);
     res.sendStatus(500);
   }
 });
-
 
 
 /* ============================
