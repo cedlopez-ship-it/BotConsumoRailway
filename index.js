@@ -56,6 +56,11 @@ async function ensureWebhook() {
 app.post("/webex", async (req, res) => {
   try {
     const event = req.body;
+	
+	if (event.actorId === process.env.WEBEX_BOT_ID) {
+		return res.sendStatus(200);
+	}
+
 
     console.log("EVENTO COMPLETO:", JSON.stringify(event, null, 2));
 
