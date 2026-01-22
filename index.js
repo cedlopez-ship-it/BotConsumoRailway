@@ -57,12 +57,15 @@ app.post("/webex", async (req, res) => {
   try {
     const event = req.body;
 
-    // Validación básica
+    // Evitar bucle (muy importante)
+    if (event.data.personId === event.actorId) {
+      return res.sendStatus(200);
+    }
+
     if (!event.data || !event.data.roomId) {
       return res.sendStatus(200);
     }
 
-    // RESPUESTA DEL BOT
     await axios.post(
       "https://webexapis.com/v1/messages",
       {
@@ -71,7 +74,7 @@ app.post("/webex", async (req, res) => {
       },
       {
         headers: {
-          Authorization: `Bearer ${WEBEX_TOKEN}`,
+          Authorization: `Bearer ${process.env.WEBEX_BOT_TOKEN}`,
           "Content-Type": "application/json"
         }
       }
@@ -83,6 +86,7 @@ app.post("/webex", async (req, res) => {
     res.sendStatus(500);
   }
 });
+
 
 
 /* ============================
