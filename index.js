@@ -55,37 +55,35 @@ async function ensureWebhook() {
 ============================ */
 app.post("/webex", async (req, res) => {
   try {
-    const { data } = req.body;
-    const messageId = data.id;
-    const roomId = data.roomId;
+    const event = req.body;
 
-    const msgRes = await axios.get(
-      `https://webexapis.com/v1/messages/${messageId}`,
+    // Validación básica
+    if (!event.data || !event.data.roomId) {
+      return res.sendStatus(200);
+    }
+
+    // RESPUESTA DEL BOT
+    await axios.post(
+      "https://webexapis.com/v1/messages",
+      {
+        roomId: event.data.roomId,
+        text: "Hola, te escucho 👋\nEscribe: consumo"
+      },
       {
         headers: {
-          Authorization: `Bearer ${WEBEX_TOKEN}`
+          Authorization: `Bearer ${WEBEX_TOKEN}`,
+          "Content-Type": "application/json"
         }
       }
     );
 
-    const text = msgRes.data.text || "";
-
-    if (text.includes("/consumo")) {
-      const usage = await getRailwayUsage();
-      await sendWebexMessage(roomId, usage);
-    }
-
-    if (text.includes("/status")) {
-      const status = await getRailwayStatus();
-      await sendWebexMessage(roomId, status);
-    }
-
     res.sendStatus(200);
-  } catch (err) {
-    console.error("Error webhook:", err.message);
+  } catch (error) {
+    console.error("Error en webhook:", error.response?.data || error.message);
     res.sendStatus(500);
   }
 });
+
 
 /* ============================
    RAILWAY FUNCTIONS
