@@ -7,274 +7,127 @@ app.use(bodyParser.json());
 
 const PORT = process.env.PORT || 8080;
 const WEBEX_TOKEN = process.env.WEBEX_BOT_TOKEN;
+const WEBEX_BOT_ID = process.env.WEBEX_BOT_ID;
 const RAILWAY_TOKEN = process.env.RAILWAY_TOKEN;
-const PUBLIC_URL = process.env.PUBLIC_URL;
 
-const WEBHOOK_NAME = "Railway Bot Webhook";
-const WEBHOOK_URL = `${PUBLIC_URL}/webex`;
-
-console.log("🔥 BOT INICIADO - VERSION DEBUG");
-
-/* ============================
-   AUTO CREAR WEBHOOK WEBEX
-============================ */
-async function ensureWebhook() {
-  const headers = {
-    Authorization: `Bearer ${WEBEX_TOKEN}`
+// ========================
+// Función real Railway
+// ========================
+async function obtenerConsumoRailway() {
+  const query = {
+    query: `
+      query {
+        me {
+          projects {
+            name
+            environments {
+              name
+              usage {
+                cpu
+                memory
+                network
+              }
+            }
+          }
+        }
+      }
+    `
   };
 
-  // Listar webhooks existentes
-  const res = await axios.get(
-    "https://webexapis.com/v1/webhooks",
-    { headers }
-  );
-
-  const exists = res.data.items.find(
-    w => w.targetUrl === WEBHOOK_URL
-  );
-
-  if (exists) {
-    console.log("Webhook ya existe:", exists.id);
-    return;
-  }
-
-  // Crear webhook
-  await axios.post(
-    "https://webexapis.com/v1/webhooks",
+  const response = await axios.post(
+    "https://backboard.railway.app/graphql",
+    query,
     {
-      name: WEBHOOK_NAME,
-      targetUrl: WEBHOOK_URL,
-      resource: "messages",
-      event: "created",
-      filter: "mentionedPeople=me"
-    },
-    { headers }
+      headers: {
+        Authorization: `Bearer ${RAILWAY_TOKEN}`,
+        "Content-Type": "application/json"
+      }
+    }
   );
 
-  console.log("Webhook creado automáticamente");
+  return response.data.data.me.projects;
 }
 
-/* ============================
-   ENDPOINT WEBEX
-============================ */
+// ========================
+// Webhook Webex
+// ========================
 app.post("/webex", async (req, res) => {
   try {
     const event = req.body;
+
     console.log("EVENTO:", JSON.stringify(event));
 
-    // Anti-loop
-    if (event.actorId === process.env.WEBEX_BOT_ID) {
+    // Evitar loop
+    if (event.actorId === WEBEX_BOT_ID) {
       return res.sendStatus(200);
     }
 
-    if (!event.data || !event.data.id || !event.data.roomId) {
+    if (!event.data || !event.data.id) {
       return res.sendStatus(200);
     }
 
-    // 1. Obtener mensaje real
-    const message = await axios.get(
+    // Obtener mensaje real
+    const msg = await axios.get(
       `https://webexapis.com/v1/messages/${event.data.id}`,
       {
         headers: {
-          Authorization: `Bearer ${process.env.WEBEX_BOT_TOKEN}`
+          Authorization: `Bearer ${WEBEX_TOKEN}`
         }
       }
     );
 
-    console.log("MENSAJE REAL:", message.data.text);
+    const texto = msg.data.text.toLowerCase();
+    console.log("MENSAJE REAL:", texto);
 
-    const text = message.data.text.toLowerCase();
+    let respuesta = "Comandos disponibles:\n- consumo\n- status";
 
-    // 2. Comando \status
-    if (text.includes("\\status") || text.includes("status")) {
-      await axios.post(
-        "https://webexapis.com/v1/messages",
-        {
-          roomId: event.data.roomId,
-          text: "🚀 Bot activo y funcionando en Railway"
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${process.env.WEBEX_BOT_TOKEN}`
-          }
-        }
-      );
-    }
-	
-	// 2. Procesar comando
-	const text = msg.data.text
-	  .toLowerCase()
-	  .replace("railwaywebex", "")
-	  .trim();
-	  
-	console.log("COMANDO LIMPIO:", text);
-    if (text === "consumo") {
-		 console.log("CONSUMO:", message.data.text);
+    // ========================
+    // COMANDO CONSUMO
+    // ========================
+    if (texto.includes("consumo")) {
+      const proyectos = await obtenerConsumoRailway();
 
-      // 3. CONSULTA A RAILWAY (aquí)
-      const railway = await axios.post(
-        "https://backboard.railway.app/graphql/v2",
-        {
-          query: `
-          query {
-            me {
-              projects {
-                name
-                usage {
-                  current {
-                    totalCostUsd
-                  }
-                }
-              }
-            }
-          }`
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${process.env.RAILWAY_TOKEN}`
-          }
-        }
-      );
-
-      const proyectos = railway.data.data.me.projects;
-
-      let respuesta = "📊 Consumo Railway:\n\n";
+      let salida = "📊 *Consumo Railway*\n\n";
 
       proyectos.forEach(p => {
-        respuesta += `• ${p.name}: $${p.usage.current.totalCostUsd}\n`;
+        p.environments.forEach(env => {
+          salida += `Proyecto: ${p.name}\n`;
+          salida += `Entorno: ${env.name}\n`;
+          salida += `CPU: ${env.usage.cpu}\n`;
+          salida += `RAM: ${env.usage.memory}\n`;
+          salida += `Network: ${env.usage.network}\n`;
+          salida += "-------------------\n";
+        });
       });
 
-      // 4. Responder a Webex
-      await axios.post(
-        "https://webexapis.com/v1/messages",
-        {
-          roomId: event.data.roomId,
-          text: respuesta
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${process.env.WEBEX_TOKEN}`
-          }
-        }
-      );
+      respuesta = salida;
     }
+
+    // ========================
+    // Enviar respuesta
+    // ========================
+    await axios.post(
+      "https://webexapis.com/v1/messages",
+      {
+        roomId: event.data.roomId,
+        text: respuesta
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${WEBEX_TOKEN}`,
+          "Content-Type": "application/json"
+        }
+      }
+    );
 
     res.sendStatus(200);
   } catch (error) {
-  console.error("ERROR COMPLETO:", error.response?.data || error);
-  res.sendStatus(500);
-	}
-
+    console.error("ERROR:", error.response?.data || error.message);
+    res.sendStatus(500);
+  }
 });
 
-
-/* ============================
-   RAILWAY FUNCTIONS
-============================ */
-async function getRailwayUsage() {
-  const query = `
-  query {
-    me {
-      projects {
-        name
-        services {
-          name
-          metrics {
-            cpu
-            memory
-            network
-          }
-        }
-      }
-    }
-  }`;
-
-  const res = await axios.post(
-    "https://backboard.railway.app/graphql/v2",
-    { query },
-    {
-      headers: {
-        Authorization: `Bearer ${RAILWAY_TOKEN}`
-      }
-    }
-  );
-
-  let msg = "📊 Consumo Railway\n\n";
-
-  res.data.data.me.projects.forEach(p => {
-    msg += `Proyecto: ${p.name}\n`;
-    p.services.forEach(s => {
-      msg += ` - ${s.name}\n`;
-      msg += `   CPU: ${s.metrics?.cpu || 0}\n`;
-      msg += `   RAM: ${s.metrics?.memory || 0}\n`;
-      msg += `   NET: ${s.metrics?.network || 0}\n`;
-    });
-    msg += "\n";
-  });
-
-  return msg;
-}
-
-async function getRailwayStatus() {
-  const query = `
-  query {
-    me {
-      projects {
-        name
-        services {
-          name
-          deployments(last: 1) {
-            status
-          }
-        }
-      }
-    }
-  }`;
-
-  const res = await axios.post(
-    "https://backboard.railway.app/graphql/v2",
-    { query },
-    {
-      headers: {
-        Authorization: `Bearer ${RAILWAY_TOKEN}`
-      }
-    }
-  );
-
-  let msg = "🟢 Estado Railway\n\n";
-
-  res.data.data.me.projects.forEach(p => {
-    msg += `Proyecto: ${p.name}\n`;
-    p.services.forEach(s => {
-      msg += ` - ${s.name}: ${s.deployments[0]?.status || "N/A"}\n`;
-    });
-    msg += "\n";
-  });
-
-  return msg;
-}
-
-/* ============================
-   WEBEX SEND
-============================ */
-async function sendWebexMessage(roomId, text) {
-  await axios.post(
-    "https://webexapis.com/v1/messages",
-    { roomId, text },
-    {
-      headers: {
-        Authorization: `Bearer ${WEBEX_TOKEN}`
-      }
-    }
-  );
-}
-
-/* ============================
-   START SERVER
-============================ */
-const PORT = process.env.PORT || 3000;
-
-app.listen(PORT, async () => {
-  console.log("Bot escuchando en puerto", PORT);
-  await ensureWebhook();   // ← magia DevOps real
+// ========================
+app.listen(PORT, () => {
+  console.log(`Bot escuchando en puerto ${PORT}`);
 });
