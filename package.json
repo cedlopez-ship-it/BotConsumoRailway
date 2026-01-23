@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Bot Webex para consultar consumos en Railway",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "start": "node index.js"
   },
