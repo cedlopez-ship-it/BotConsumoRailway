@@ -8,6 +8,7 @@ const bodyParser = require("body-parser");
 const app = express();
 app.use(express.json());
 
+const PORT = process.env.PORT || 8080;
 const WEBEX_TOKEN = process.env.WEBEX_BOT_TOKEN;
 const RAILWAY_TOKEN = process.env.RAILWAY_TOKEN;
 const PUBLIC_URL = process.env.PUBLIC_URL;
