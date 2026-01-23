@@ -53,20 +53,21 @@ async function ensureWebhook() {
 /* ============================
    ENDPOINT WEBEX
 ============================ */
-app.post("/webex", async (req, app.post("/webex", async (req, res) => {
+app.post("/webex", async (req, res) => {
   try {
     const event = req.body;
+    console.log("EVENTO:", JSON.stringify(event));
 
-    // Anti-loop
     if (event.actorId === process.env.WEBEX_BOT_ID) {
+      console.log("Ignorado: mensaje del bot");
       return res.sendStatus(200);
     }
 
     if (!event.data || !event.data.id || !event.data.roomId) {
+      console.log("Evento inválido");
       return res.sendStatus(200);
     }
 
-    // 1. Obtener mensaje real desde Webex
     const message = await axios.get(
       `https://webexapis.com/v1/messages/${event.data.id}`,
       {
@@ -76,10 +77,13 @@ app.post("/webex", async (req, app.post("/webex", async (req, res) => {
       }
     );
 
+    console.log("MENSAJE:", message.data.text);
+
     const text = message.data.text.toLowerCase();
 
-    // 2. Comando \status
     if (text.includes("\\status") || text.includes("status")) {
+      console.log("Comando STATUS detectado");
+
       await axios.post(
         "https://webexapis.com/v1/messages",
         {
@@ -88,8 +92,7 @@ app.post("/webex", async (req, app.post("/webex", async (req, res) => {
         },
         {
           headers: {
-            Authorization: `Bearer ${process.env.WEBEX_BOT_TOKEN}`,
-            "Content-Type": "application/json"
+            Authorization: `Bearer ${process.env.WEBEX_BOT_TOKEN}`
           }
         }
       );
@@ -97,7 +100,7 @@ app.post("/webex", async (req, app.post("/webex", async (req, res) => {
 
     res.sendStatus(200);
   } catch (error) {
-    console.error("Error:", error.response?.data || error.message);
+    console.error("ERROR REAL:", error.response?.data || error.message);
     res.sendStatus(500);
   }
 });
