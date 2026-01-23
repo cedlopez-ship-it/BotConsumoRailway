@@ -1,12 +1,13 @@
 import express from "express";
 import axios from "axios";
+import bodyParser from "body-parser";
 
 const express = require("express");
 const axios = require("axios");
 const bodyParser = require("body-parser");
 
 const app = express();
-app.use(express.json());
+app.use(bodyParser.json());
 
 const PORT = process.env.PORT || 8080;
 const WEBEX_TOKEN = process.env.WEBEX_BOT_TOKEN;
