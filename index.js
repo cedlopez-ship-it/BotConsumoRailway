@@ -56,21 +56,20 @@ async function ensureWebhook() {
    ENDPOINT WEBEX
 ============================ */
 app.post("/webex", async (req, res) => {
-	console.log("🔥 ENTRO AL ENDPOINT /webex");
   try {
     const event = req.body;
     console.log("EVENTO:", JSON.stringify(event));
 
+    // Anti-loop
     if (event.actorId === process.env.WEBEX_BOT_ID) {
-      console.log("Ignorado: mensaje del bot");
       return res.sendStatus(200);
     }
 
     if (!event.data || !event.data.id || !event.data.roomId) {
-      console.log("Evento inválido");
       return res.sendStatus(200);
     }
 
+    // 1. Obtener mensaje real
     const message = await axios.get(
       `https://webexapis.com/v1/messages/${event.data.id}`,
       {
@@ -80,13 +79,12 @@ app.post("/webex", async (req, res) => {
       }
     );
 
-    console.log("MENSAJE:", message.data.text);
+    console.log("MENSAJE REAL:", message.data.text);
 
     const text = message.data.text.toLowerCase();
 
+    // 2. Comando \status
     if (text.includes("\\status") || text.includes("status")) {
-      console.log("Comando STATUS detectado");
-
       await axios.post(
         "https://webexapis.com/v1/messages",
         {
@@ -100,12 +98,64 @@ app.post("/webex", async (req, res) => {
         }
       );
     }
+	
+	// 2. Procesar comando
+    if (text === "consumo") {
+
+      // 3. CONSULTA A RAILWAY (aquí)
+      const railway = await axios.post(
+        "https://backboard.railway.app/graphql/v2",
+        {
+          query: `
+          query {
+            me {
+              projects {
+                name
+                usage {
+                  current {
+                    totalCostUsd
+                  }
+                }
+              }
+            }
+          }`
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${process.env.RAILWAY_TOKEN}`
+          }
+        }
+      );
+
+      const proyectos = railway.data.data.me.projects;
+
+      let respuesta = "📊 Consumo Railway:\n\n";
+
+      proyectos.forEach(p => {
+        respuesta += `• ${p.name}: $${p.usage.current.totalCostUsd}\n`;
+      });
+
+      // 4. Responder a Webex
+      await axios.post(
+        "https://webexapis.com/v1/messages",
+        {
+          roomId: event.data.roomId,
+          text: respuesta
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${process.env.WEBEX_TOKEN}`
+          }
+        }
+      );
+    }
 
     res.sendStatus(200);
   } catch (error) {
-    console.error("ERROR REAL:", error.response?.data || error.message);
-    res.sendStatus(500);
-  }
+  console.error("ERROR COMPLETO:", error.response?.data || error);
+  res.sendStatus(500);
+	}
+
 });
 
 
