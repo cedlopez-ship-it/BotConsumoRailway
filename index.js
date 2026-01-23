@@ -101,6 +101,7 @@ app.post("/webex", async (req, res) => {
 	
 	// 2. Procesar comando
     if (text === "consumo") {
+		 console.log("CONSUMO:", message.data.text);
 
       // 3. CONSULTA A RAILWAY (aquí)
       const railway = await axios.post(
