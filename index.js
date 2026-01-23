@@ -100,6 +100,12 @@ app.post("/webex", async (req, res) => {
     }
 	
 	// 2. Procesar comando
+	const text = msg.data.text
+	  .toLowerCase()
+	  .replace("railwaywebex", "")
+	  .trim();
+	  
+	console.log("COMANDO LIMPIO:", text);
     if (text === "consumo") {
 		 console.log("CONSUMO:", message.data.text);
 
