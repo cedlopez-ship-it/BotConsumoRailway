@@ -11,6 +11,8 @@ const PUBLIC_URL = process.env.PUBLIC_URL;
 const WEBHOOK_NAME = "Railway Bot Webhook";
 const WEBHOOK_URL = `${PUBLIC_URL}/webex`;
 
+console.log("🔥 BOT INICIADO - VERSION DEBUG");
+
 /* ============================
    AUTO CREAR WEBHOOK WEBEX
 ============================ */
@@ -54,6 +56,7 @@ async function ensureWebhook() {
    ENDPOINT WEBEX
 ============================ */
 app.post("/webex", async (req, res) => {
+	console.log("🔥 ENTRO AL ENDPOINT /webex");
   try {
     const event = req.body;
     console.log("EVENTO:", JSON.stringify(event));
