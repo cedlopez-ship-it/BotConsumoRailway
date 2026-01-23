@@ -53,34 +53,47 @@ async function ensureWebhook() {
 /* ============================
    ENDPOINT WEBEX
 ============================ */
-app.post("/webex", async (req, res) => {
+app.post("/webex", async (req, app.post("/webex", async (req, res) => {
   try {
     const event = req.body;
-	
-	if (event.actorId === process.env.WEBEX_BOT_ID) {
-		return res.sendStatus(200);
-	}
 
-
-    console.log("EVENTO COMPLETO:", JSON.stringify(event, null, 2));
-
-    if (!event.data || !event.data.roomId) {
+    // Anti-loop
+    if (event.actorId === process.env.WEBEX_BOT_ID) {
       return res.sendStatus(200);
     }
 
-    await axios.post(
-      "https://webexapis.com/v1/messages",
-      {
-        roomId: event.data.roomId,
-        text: "Hola, te escucho 👋"
-      },
+    if (!event.data || !event.data.id || !event.data.roomId) {
+      return res.sendStatus(200);
+    }
+
+    // 1. Obtener mensaje real desde Webex
+    const message = await axios.get(
+      `https://webexapis.com/v1/messages/${event.data.id}`,
       {
         headers: {
-          Authorization: `Bearer ${process.env.WEBEX_BOT_TOKEN}`,
-          "Content-Type": "application/json"
+          Authorization: `Bearer ${process.env.WEBEX_BOT_TOKEN}`
         }
       }
     );
+
+    const text = message.data.text.toLowerCase();
+
+    // 2. Comando \status
+    if (text.includes("\\status") || text.includes("status")) {
+      await axios.post(
+        "https://webexapis.com/v1/messages",
+        {
+          roomId: event.data.roomId,
+          text: "🚀 Bot activo y funcionando en Railway"
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${process.env.WEBEX_BOT_TOKEN}`,
+            "Content-Type": "application/json"
+          }
+        }
+      );
+    }
 
     res.sendStatus(200);
   } catch (error) {
