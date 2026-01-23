@@ -10,10 +10,13 @@ const WEBEX_TOKEN = process.env.WEBEX_BOT_TOKEN;
 const WEBEX_BOT_ID = process.env.WEBEX_BOT_ID;
 const RAILWAY_TOKEN = process.env.RAILWAY_TOKEN;
 
+console.log("=== BOT INICIANDO ===");
+
 // ========================
 // Función real Railway
 // ========================
 async function obtenerConsumoRailway() {
+   console.log(">>> COMANDO CONSUMO DETECTADO");
   const query = {
     query: `
       query {
@@ -85,6 +88,7 @@ app.post("/webex", async (req, res) => {
     // COMANDO CONSUMO
     // ========================
   if (text.includes("consumo")) {
+	     console.log(">>> COMANDO CONSUMO DETECTADO");
     await fetch("https://webexapis.com/v1/messages", {
       method: "POST",
       headers: {
