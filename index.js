@@ -84,24 +84,20 @@ app.post("/webex", async (req, res) => {
     // ========================
     // COMANDO CONSUMO
     // ========================
-    if (texto.includes("consumo")) {
-      const proyectos = await obtenerConsumoRailway();
+  if (text.includes("consumo")) {
+    await fetch("https://webexapis.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${process.env.WEBEX_TOKEN}`
+      },
+      body: JSON.stringify({
+        roomId: msgData.roomId,
+        text: "📊 Consultando consumos en Railway..."
+      })
+    });
+  }
 
-      let salida = "📊 *Consumo Railway*\n\n";
-
-      proyectos.forEach(p => {
-        p.environments.forEach(env => {
-          salida += `Proyecto: ${p.name}\n`;
-          salida += `Entorno: ${env.name}\n`;
-          salida += `CPU: ${env.usage.cpu}\n`;
-          salida += `RAM: ${env.usage.memory}\n`;
-          salida += `Network: ${env.usage.network}\n`;
-          salida += "-------------------\n";
-        });
-      });
-
-      respuesta = salida;
-    }
 
     // ========================
     // Enviar respuesta
