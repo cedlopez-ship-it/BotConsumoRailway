@@ -57,7 +57,8 @@ async function obtenerConsumoRailway() {
 app.post("/webex", async (req, res) => {
   try {
     const event = req.body;
-
+	console.log("=== WEBHOOK RECIBIDO ===");
+	console.log(JSON.stringify(req.body, null, 2));
     console.log("EVENTO:", JSON.stringify(event));
 
     // Evitar loop
@@ -68,6 +69,11 @@ app.post("/webex", async (req, res) => {
     if (!event.data || !event.data.id) {
       return res.sendStatus(200);
     }
+	
+	if (text.toLowerCase().includes("consumo")) {
+    console.log(">>> COMANDO CONSUMO DETECTADO");
+	}
+
 
     // Obtener mensaje real
     const msg = await axios.get(
