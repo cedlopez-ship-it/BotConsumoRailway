@@ -55,6 +55,7 @@ async function obtenerConsumoRailway() {
 // ========================
 // Webhook Webex
 // ========================
+
 app.post("/webex", async (req, res) => {
   console.log("=== WEBHOOK RECIBIDO ===");
   console.log(JSON.stringify(req.body, null, 2));
@@ -78,6 +79,7 @@ app.post("/webex", async (req, res) => {
 
   res.sendStatus(200);
 });
+}
 
 
     // ========================
