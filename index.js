@@ -6,7 +6,6 @@ const app = express();
 app.use(bodyParser.json());
 
 const PORT = process.env.PORT || 8080;
-app.listen(PORT);
 const WEBEX_TOKEN = process.env.WEBEX_BOT_TOKEN;
 const WEBEX_BOT_ID = process.env.WEBEX_BOT_ID;
 const RAILWAY_TOKEN = process.env.RAILWAY_TOKEN;
