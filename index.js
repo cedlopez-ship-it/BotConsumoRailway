@@ -45,6 +45,53 @@ app.post("/webex", async (req, res) => {
     if (text.includes("consumo")) {
       const reply = "🚆 Railway está activo.\n(La consulta real vendrá aquí)";
       
+	  const query = `
+    query {
+      me {
+        projects {
+          edges {
+            node {
+              name
+              environments {
+                edges {
+                  node {
+                    name
+                    serviceInstances {
+                      edges {
+                        node {
+                          usage {
+                            computeTime
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  `;
+  const railwayRes = await axios.post(
+    "https://backboard.railway.app/graphql/v2",
+    { query },
+    {
+      headers: {
+        Authorization: `Bearer ${process.env.RAILWAY_TOKEN}`,
+        "Content-Type": "application/json"
+      }
+    }
+  );
+
+  const projects = railwayRes.data.data.me.projects.edges;
+
+  let reply = "📊 Consumo Railway:\n\n";
+
+  for (const p of projects) {
+    reply += `• ${p.node.name}\n`;
+  }
       await axios.post(
         "https://webexapis.com/v1/messages",
         {
