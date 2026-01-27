@@ -55,58 +55,28 @@ async function obtenerConsumoRailway() {
 // Webhook Webex
 // ========================
 app.post("/webex", async (req, res) => {
-  try {
-    const event = req.body;
-	console.log("=== WEBHOOK RECIBIDO ===");
-	console.log(JSON.stringify(req.body, null, 2));
-    console.log("EVENTO:", JSON.stringify(event));
+  console.log("=== WEBHOOK RECIBIDO ===");
+  console.log(JSON.stringify(req.body, null, 2));
 
-    // Evitar loop
-    if (event.actorId === WEBEX_BOT_ID) {
-      return res.sendStatus(200);
-    }
+  const text = req.body.data?.text || "";
+  const roomId = req.body.data?.roomId;
 
-    if (!event.data || !event.data.id) {
-      return res.sendStatus(200);
-    }
-	
-	if (text.toLowerCase().includes("consumo")) {
-    console.log(">>> COMANDO CONSUMO DETECTADO");
-	}
+  console.log("TEXTO REAL:", text);
 
+  await fetch("https://webexapis.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${process.env.WEBEX_TOKEN}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      roomId,
+      text: "Webhook recibido correctamente 👌"
+    })
+  });
 
-    // Obtener mensaje real
-    const msg = await axios.get(
-      `https://webexapis.com/v1/messages/${event.data.id}`,
-      {
-        headers: {
-          Authorization: `Bearer ${WEBEX_TOKEN}`
-        }
-      }
-    );
-
-    const texto = msg.data.text.toLowerCase();
-    console.log("MENSAJE REAL:", texto);
-
-    let respuesta = "Comandos disponibles:\n- consumo\n- status";
-
-    // ========================
-    // COMANDO CONSUMO
-    // ========================
-  if (text.includes("consumo")) {
-	     console.log(">>> COMANDO CONSUMO DETECTADO");
-    await fetch("https://webexapis.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.WEBEX_TOKEN}`
-      },
-      body: JSON.stringify({
-        roomId: msgData.roomId,
-        text: "📊 Consultando consumos en Railway..."
-      })
-    });
-  }
+  res.sendStatus(200);
+});
 
 
     // ========================
