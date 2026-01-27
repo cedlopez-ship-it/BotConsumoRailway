@@ -1,7 +1,8 @@
 import express from "express";
 import axios from "axios";
 import bodyParser from "body-parser";
-import fetch from "node-fetch";
+
+const response = await fetch("https://api.railway.app/graphql", {...});
 
 const app = express();
 app.use(bodyParser.json());
