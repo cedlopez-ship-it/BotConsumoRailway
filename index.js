@@ -42,6 +42,7 @@ app.post("/webex", async (req, res) => {
 
     // Comando consumo
     if (text.includes("consumo")) {
+	console.log("Entro a Consumo");
       const reply = "🚆 Railway está activo.\n(La consulta real vendrá aquí)";
 	const query = `
     query {
