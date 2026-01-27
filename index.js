@@ -43,6 +43,20 @@ app.post("/webex", async (req, res) => {
     // Comando consumo
     if (text.includes("consumo")) {
       const reply = "🚆 Railway está activo.\n(La consulta real vendrá aquí)";
+	const query = `
+    query {
+      me {
+        projects {
+          edges {
+            node {
+              name
+            }
+          }
+        }
+      }
+    }
+  `;
+
       
 	const railwayRes = await axios.post(
     "https://backboard.railway.app/graphql/v2",
