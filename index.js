@@ -13,6 +13,10 @@ const RAILWAY_TOKEN = process.env.RAILWAY_TOKEN;
 console.log("=== BOT INICIANDO ===");
 
 // Webhook Webex
+
+app.get("/", (req, res) => {
+  res.send("OK");
+});
 app.post("/webex", async (req, res) => {
   try {
     const event = req.body;
