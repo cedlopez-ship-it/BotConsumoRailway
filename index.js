@@ -44,35 +44,14 @@ app.post("/webex", async (req, res) => {
     if (text.includes("consumo")) {
       const reply = "🚆 Railway está activo.\n(La consulta real vendrá aquí)";
       
-	  const query = `
-    query {
-      me {
-        projects {
-          edges {
-            node {
-              name
-              environments {
-                edges {
-                  node {
-                    name
-                    serviceInstances {
-                      edges {
-                        node {
-                          usage {
-                            computeTime
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  `;
+	const query = `
+		query {
+		me {
+		id
+		name
+	}
+	}
+	`;
   const railwayRes = await axios.post(
     "https://backboard.railway.app/graphql/v2",
     { query },
