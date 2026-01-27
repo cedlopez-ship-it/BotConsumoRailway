@@ -87,6 +87,7 @@ app.post("/webex", async (req, res) => {
           }
         }
       );
+	  console.log(JSON.stringify(railwayRes.data, null, 2));
     }
 
     res.sendStatus(200);
