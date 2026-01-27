@@ -69,7 +69,9 @@ app.post("/webex", async (req, res) => {
           }
         }
       );
+	  console.log("inicio Railway Log");
 	console.log("RAILWAY RAW:", JSON.stringify(railwayRes.data, null, 2));
+	console.log("Fin Railway Log");
       const projects = railwayRes.data?.data?.me?.projects?.edges || [];
 
       for (const p of projects) {
