@@ -16,35 +16,12 @@ console.log("=== BOT INICIANDO ===");
 app.get("/", (req, res) => {
   res.send("OK");
 });
-app.post("/webex", async (req, res) => {
-  try {
-    const event = req.body;
+if (text.includes("consumo")) {
+  console.log("Entro a Consumo");
 
-    // Ignorar mensajes del propio bot
-    if (event.actorId === WEBEX_BOT_ID) {
-      return res.sendStatus(200);
-    }
+  let reply = "📊 Consumo Railway:\n\n";
 
-    if (!event.data?.id) return res.sendStatus(200);
-
-    // Obtener mensaje real
-    const msg = await axios.get(
-      `https://webexapis.com/v1/messages/${event.data.id}`,
-      {
-        headers: {
-          Authorization: `Bearer ${WEBEX_TOKEN}`
-        }
-      }
-    );
-
-    const text = msg.data.text.toLowerCase();
-    console.log("MENSAJE REAL:", text);
-
-    // Comando consumo
-    if (text.includes("consumo")) {
-	console.log("Entro a Consumo");
-    let reply = "📊 Consumo Railway:\n\n";
-	const query = `
+  const query = `
     query {
       me {
         projects {
@@ -58,8 +35,7 @@ app.post("/webex", async (req, res) => {
     }
   `;
 
-      
-	const railwayRes = await axios.post(
+  const railwayRes = await axios.post(
     "https://backboard.railway.app/graphql/v2",
     { query },
     {
@@ -69,7 +45,27 @@ app.post("/webex", async (req, res) => {
       }
     }
   );
-	}
+
+  const projects = railwayRes.data.data.me.projects.edges;
+
+  for (const p of projects) {
+    reply += `• ${p.node.name}\n`;
+  }
+
+  await axios.post(
+    "https://webexapis.com/v1/messages",
+    {
+      roomId: event.data.roomId,
+      text: reply
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${WEBEX_TOKEN}`,
+        "Content-Type": "application/json"
+      }
+    }
+  );
+}
 
 app.listen(PORT, () => {
   console.log(`Bot escuchando en puerto ${PORT}`);
