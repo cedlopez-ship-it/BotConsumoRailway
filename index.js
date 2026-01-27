@@ -43,7 +43,7 @@ app.post("/webex", async (req, res) => {
     // Comando consumo
     if (text.includes("consumo")) {
 	console.log("Entro a Consumo");
-      const reply = "🚆 Railway está activo.\n(La consulta real vendrá aquí)";
+    let reply = "📊 Consumo Railway:\n\n";
 	const query = `
     query {
       me {
@@ -69,34 +69,7 @@ app.post("/webex", async (req, res) => {
       }
     }
   );
-
-  const projects = railwayRes.data.data.me.projects.edges;
-
-  for (const p of projects) {
-    reply += `• ${p.node.name}\n`;
-  }
-      await axios.post(
-        "https://webexapis.com/v1/messages",
-        {
-          roomId: event.data.roomId,
-          text: reply
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${WEBEX_TOKEN}`,
-            "Content-Type": "application/json"
-          }
-        }
-      );
-	  console.log(JSON.stringify(railwayRes.data, null, 2));
-    }
-
-    res.sendStatus(200);
-  } catch (error) {
-    console.error("ERROR:", error.message);
-    res.sendStatus(500);
-  }
-});
+	}
 
 app.listen(PORT, () => {
   console.log(`Bot escuchando en puerto ${PORT}`);
