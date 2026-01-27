@@ -13,7 +13,6 @@ const RAILWAY_TOKEN = process.env.RAILWAY_TOKEN;
 console.log("=== BOT INICIANDO ===");
 
 // Webhook Webex
-
 app.get("/", (req, res) => {
   res.send("OK");
 });
@@ -86,8 +85,6 @@ app.post("/webex", async (req, res) => {
   );
 
   const projects = railwayRes.data.data.me.projects.edges;
-
-  let reply = "📊 Consumo Railway:\n\n";
 
   for (const p of projects) {
     reply += `• ${p.node.name}\n`;
